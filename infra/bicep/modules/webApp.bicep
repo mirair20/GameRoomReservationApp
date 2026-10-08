@@ -14,10 +14,6 @@ param acrLoginServer string
 param containerImage string = 'appsvc/staticsite:latest'
 
 @secure()
-@description('PostgreSQL connection string for the app')
-param postgresConnectionString string = ''
-
-@secure()
 @description('Azure Communication Services connection string for email (optional)')
 param communicationConnectionString string = ''
 
@@ -51,11 +47,6 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
         }
       ]
       connectionStrings: [
-        {
-          name: 'PostgresConnection'
-          connectionString: postgresConnectionString
-          type: 'Custom'
-        }
         {
           name: 'CommunicationConnection'
           connectionString: communicationConnectionString

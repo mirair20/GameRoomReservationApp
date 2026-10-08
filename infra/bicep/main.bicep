@@ -1,12 +1,12 @@
 targetScope = 'subscription'
 
-@description('Azure region for all resources (must be in your subscription\'s allowed locations policy)')
+@description('Azure region for all resources')
 param location string = 'germanywestcentral'
 
 @description('Name of the resource group')
 param resourceGroupName string = 'GameRoomBookingSystem'
 
-@description('Base name used to derive resource names (alphanumeric only, lowercase recommended)')
+@description('Base name used to derive resource names')
 param appBaseName string = 'gameroombooking'
 
 @description('SKU for the App Service Plan')
@@ -14,14 +14,6 @@ param appServicePlanSku string = 'B1'
 
 @description('Container image and tag to deploy, e.g. gameroombookingsys:latest. Defaults to a placeholder until you push your own image.')
 param containerImage string = 'appsvc/staticsite:latest'
-
-@secure()
-@description('PostgreSQL connection string for the app')
-param postgresConnectionString string = ''
-
-@secure()
-@description('Azure Communication Services connection string for email (optional)')
-param communicationConnectionString string = ''
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: resourceGroupName
@@ -56,8 +48,6 @@ module webApp 'modules/webApp.bicep' = {
     appServicePlanId: appServicePlan.outputs.planId
     acrLoginServer: acr.outputs.loginServer
     containerImage: containerImage
-    postgresConnectionString: postgresConnectionString
-    communicationConnectionString: communicationConnectionString
   }
 }
 
