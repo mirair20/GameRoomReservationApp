@@ -1,6 +1,6 @@
 # Bicep Setup Guide
 
-This folder contains the Bicep templates that deploy the Game Room Booking System to Azure (resource group, Container Registry, App Service Plan, and Web App for Containers).
+This folder contains the Bicep templates that deploy the Game Room Booking System to Azure (resource group, Container Registry, Storage Account, App Service Plan, and Web App for Containers).
 
 ## 1. Prerequisites
 
@@ -103,6 +103,7 @@ infra/bicep/
 ├── main.bicep                       # Entry point (subscription scope)
 └── modules/
     ├── containerRegistry.bicep      # Azure Container Registry
+    ├── storageaccount.bicep         # Storage account (StorageV2, Standard_LRS)
     ├── appServicePlan.bicep         # Linux App Service Plan
     ├── webApp.bicep                 # Linux Web App for Containers
     └── acrRoleAssignment.bicep      # Grants the Web App's managed identity AcrPull
