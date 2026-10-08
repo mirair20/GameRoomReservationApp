@@ -61,13 +61,36 @@ Notes:
   az policy assignment list -o table
   ```
 
-## 5. Push your container image
+## 5. Install Docker and push your container image
 
-The Web App is created with a placeholder image. Build and push your real image to the registry this template created, then point the Web App at it.
+The default `containerImage` is `gameroombookingsys:latest` from the registry this template creates. On a **fresh deployment the registry is empty**, so the Web App can't pull the image (and will show a 503) until you push it. Build and push the image, then restart the Web App.
 
 > **Note:** ACR Tasks (cloud-side builds via `az acr build`) are blocked on Azure for Students subscriptions with a `TasksOperationsNotAllowed` error, so this guide uses a **local Docker build + push** instead — this uses plain registry push/pull, which isn't restricted.
 
-**Prerequisite:** Docker Desktop/Engine installed and running locally.
+### 5.1 Install Docker
+
+- **Windows / macOS:** install [Docker Desktop](https://docs.docker.com/desktop/) and start it.
+- **Ubuntu / Debian:** follow the [Docker Engine install guide](https://docs.docker.com/engine/install/).
+- **Arch / CachyOS:**
+  ```bash
+  sudo pacman -S docker
+  sudo systemctl enable --now docker.service
+  ```
+
+On Linux, allow your user to run Docker without `sudo` (log out and back in afterwards):
+```bash
+sudo usermod -aG docker $USER
+```
+
+Verify it works:
+```bash
+docker version
+docker run --rm hello-world
+```
+
+### 5.2 Build and push
+
+Run these from the repository root:
 
 ```bash
 # 1. Build the image locally (same context/dockerfile as docker-compose.yml)
@@ -79,12 +102,31 @@ az acr login --name gameroombookingacr
 # 3. Push the image
 docker push gameroombookingacr.azurecr.io/gameroombookingsys:latest
 
-# 4. Point the Web App at the new image
-az webapp config container set \
-  --name gameroombooking-app \
-  --resource-group GameRoomBookingSystem \
-  --container-image-name gameroombookingacr.azurecr.io/gameroombookingsys:latest
+# 4. Restart the Web App so it pulls the new image
+az webapp restart --name gameroombooking-app --resource-group GameRoomBookingSystem
 ```
+
+To use a different image/tag, pass it at deploy time:
+```bash
+az deployment sub create --name gameroom-deployment --location germanywestcentral \
+  --template-file infra/bicep/main.bicep \
+  --parameters containerImage=gameroombookingsys:v2
+```
+
+Optional: sanity-check the image locally before pushing:
+```bash
+docker run --rm -p 8080:8080 gameroombookingacr.azurecr.io/gameroombookingsys:latest
+```
+(The app logs a warning that it can't reach PostgreSQL; that's expected until a database is provisioned.)
+
+## Troubleshooting
+
+- **Web App returns 503 / container exits with code 139:** check the startup logs with `az webapp log tail`. A leftover empty `PostgresConnection` connection string on the Web App will override the default in `appsettings.json` and crash the app on startup. Remove it:
+  ```bash
+  az webapp config connection-string delete --name gameroombooking-app \
+    --resource-group GameRoomBookingSystem --setting-names PostgresConnection
+  ```
+- **`az acr build` fails with `TasksOperationsNotAllowed`:** use the local `docker build` + `docker push` flow above.
 
 ## 6. Useful follow-ups
 
